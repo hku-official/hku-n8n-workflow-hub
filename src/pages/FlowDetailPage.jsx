@@ -126,7 +126,7 @@ export default function FlowDetailPage() {
             </button>
           </div>
         </div>
-        <div ref={demoContainerRef} style={{ minHeight: '500px', width: '100%' }} />
+        <div ref={demoContainerRef} style={{ width: '100%' }} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
