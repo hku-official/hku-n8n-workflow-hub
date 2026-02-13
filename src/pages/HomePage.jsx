@@ -40,7 +40,7 @@ export default function HomePage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8">
       <section className="text-center py-8">
         <h1 className="text-4xl font-bold mb-3 text-gray-800">
           HKU <span className="text-hku-green">n8n Workflow</span> Hub
