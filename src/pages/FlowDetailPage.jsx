@@ -128,7 +128,7 @@ export default function FlowDetailPage() {
                 </button>
               </div>
             </div>
-            <div className="p-4" ref={demoContainerRef} style={{ minHeight: '300px' }} />
+            <div className="p-4" ref={demoContainerRef} style={{ minHeight: '600px' }} />
           </div>
 
           {parsedWorkflow?.nodes?.length > 0 && (
