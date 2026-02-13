@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-white text-gray-800 antialiased;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+}
+
+@layer components {
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg;
+  }
+  .card-hover:hover {
+    transform: scale(1.01);
+    --tw-shadow-color: rgba(0,0,0,0.05);
+  }
+  .btn-primary {
+    @apply text-white px-4 py-2 rounded-lg font-medium transition-colors;
+    background-color: #006747;
+  }
+  .btn-primary:hover {
+    background-color: #008a5e;
+  }
+  .btn-secondary {
+    @apply bg-white text-gray-700 px-4 py-2 rounded-lg font-medium border border-gray-200 transition-colors hover:bg-gray-50;
+  }
+}
+
+n8n-demo {
+  --n8n-demo-bg: #f8f8f8;
+  width: 100%;
+  display: block;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  min-height: 300px;
+}

@@ -1,0 +1,387 @@
+{
+  "name": "n8n Flow Sharing API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "n8n-flows",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-list",
+      "name": "Webhook - List Flows",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 500],
+      "webhookId": "n8n-flows-list"
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "n8n-flows/categories",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-categories",
+      "name": "Webhook - List Categories",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 700],
+      "webhookId": "n8n-flows-categories"
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "n8n-flow",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-get",
+      "name": "Webhook - Get Flow",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 900],
+      "webhookId": "n8n-flows-get"
+    },
+    {
+      "parameters": {
+        "resource": "record",
+        "operation": "getMany",
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "timyeung_n8nflows"
+        },
+        "queryType": "odata",
+        "filter": "timyeung_publishstatus eq 101980001",
+        "orderBy": "createdon desc",
+        "select": "timyeung_n8nflowid,timyeung_name,timyeung_description,timyeung_author,timyeung_tags,timyeung_viewcount,timyeung_downloadcount,timyeung_version,timyeung_thumbnail,createdon,modifiedon,_timyeung_category_value",
+        "limit": 100,
+        "options": {}
+      },
+      "id": "dv-list-flows",
+      "name": "Dataverse - List Flows",
+      "type": "n8n-nodes-ms-dataverse.dataverse",
+      "typeVersion": 1,
+      "position": [500, 500],
+      "credentials": {
+        "dataverseOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "Dataverse account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const flows = items.map(item => {\n  const json = item.json;\n  return {\n    json: {\n      id: json.timyeung_n8nflowid,\n      name: json.timyeung_name,\n      description: json.timyeung_description,\n      author: json.timyeung_author || 'Unknown',\n      tags: json.timyeung_tags ? json.timyeung_tags.split(',').map(t => t.trim()) : [],\n      category: json['_timyeung_category_value@OData.Community.Display.V1.FormattedValue'] || '',\n      categoryId: json._timyeung_category_value || null,\n      viewCount: json.timyeung_viewcount || 0,\n      downloadCount: json.timyeung_downloadcount || 0,\n      version: json.timyeung_version || '1.0.0',\n      thumbnailUrl: json.timyeung_thumbnail || null,\n      createdAt: json.createdon,\n      updatedAt: json.modifiedon\n    }\n  };\n});\n\n// Apply search filter if provided\nconst query = $input.first().json.query;\nconst search = query?.search?.toLowerCase();\nconst category = query?.category;\nlet filtered = flows.map(f => f.json);\n\nif (search) {\n  filtered = filtered.filter(f =>\n    f.name.toLowerCase().includes(search) ||\n    f.description?.toLowerCase().includes(search) ||\n    f.tags.some(t => t.toLowerCase().includes(search))\n  );\n}\nif (category) {\n  filtered = filtered.filter(f => f.category === category);\n}\n\n// Pagination\nconst page = parseInt(query?.page) || 1;\nconst pageSize = parseInt(query?.pageSize) || 12;\nconst start = (page - 1) * pageSize;\nconst paged = filtered.slice(start, start + pageSize);\n\nreturn [{\n  json: {\n    flows: paged,\n    total: filtered.length,\n    page,\n    pageSize,\n    totalPages: Math.ceil(filtered.length / pageSize)\n  }\n}];"
+      },
+      "id": "fn-transform-list",
+      "name": "Transform List Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [750, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-list",
+      "name": "Respond - List Flows",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 500]
+    },
+    {
+      "parameters": {
+        "resource": "record",
+        "operation": "getMany",
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "timyeung_n8ncategories"
+        },
+        "queryType": "odata",
+        "orderBy": "timyeung_displayorder asc",
+        "select": "timyeung_n8ncategoryid,timyeung_name,timyeung_description,timyeung_displayorder,timyeung_icon",
+        "limit": 50,
+        "options": {}
+      },
+      "id": "dv-list-categories",
+      "name": "Dataverse - List Categories",
+      "type": "n8n-nodes-ms-dataverse.dataverse",
+      "typeVersion": 1,
+      "position": [500, 700],
+      "credentials": {
+        "dataverseOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "Dataverse account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const categories = items.map(item => {\n  const json = item.json;\n  return {\n    json: {\n      id: json.timyeung_n8ncategoryid,\n      name: json.timyeung_name,\n      description: json.timyeung_description,\n      displayOrder: json.timyeung_displayorder,\n      icon: json.timyeung_icon\n    }\n  };\n});\nreturn [{ json: { categories: categories.map(c => c.json) } }];"
+      },
+      "id": "fn-transform-categories",
+      "name": "Transform Categories Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [750, 700]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-categories",
+      "name": "Respond - Categories",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 700]
+    },
+    {
+      "parameters": {
+        "resource": "record",
+        "operation": "get",
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "timyeung_n8nflows"
+        },
+        "recordId": "={{ $json.query.id }}",
+        "options": {}
+      },
+      "id": "dv-get-flow",
+      "name": "Dataverse - Get Flow",
+      "type": "n8n-nodes-ms-dataverse.dataverse",
+      "typeVersion": 1,
+      "position": [500, 900],
+      "credentials": {
+        "dataverseOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "Dataverse account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const json = items[0].json;\nconst flow = {\n  id: json.timyeung_n8nflowid,\n  name: json.timyeung_name,\n  description: json.timyeung_description,\n  author: json.timyeung_author || 'Unknown',\n  authorContact: json.timyeung_authorcontact,\n  flowJson: json.timyeung_flowjson,\n  tags: json.timyeung_tags ? json.timyeung_tags.split(',').map(t => t.trim()) : [],\n  category: json['_timyeung_category_value@OData.Community.Display.V1.FormattedValue'] || '',\n  categoryId: json._timyeung_category_value || null,\n  viewCount: json.timyeung_viewcount || 0,\n  downloadCount: json.timyeung_downloadcount || 0,\n  version: json.timyeung_version || '1.0.0',\n  n8nVersion: json.timyeung_n8nversion,\n  nodeCount: json.timyeung_nodecount,\n  thumbnailUrl: json.timyeung_thumbnail || null,\n  createdAt: json.createdon,\n  updatedAt: json.modifiedon\n};\nreturn [{ json: flow }];"
+      },
+      "id": "fn-transform-flow",
+      "name": "Transform Flow Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [750, 900]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-flow",
+      "name": "Respond - Get Flow",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 900]
+    },
+    {
+      "parameters": {
+        "resource": "record",
+        "operation": "update",
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "timyeung_n8nflows"
+        },
+        "recordId": "={{ $json.query.id }}",
+        "fields": {
+          "values": [
+            {
+              "name": "timyeung_viewcount",
+              "value": "={{ $node['Dataverse - Get Flow'].json.timyeung_viewcount + 1 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dv-increment-view",
+      "name": "Dataverse - Increment View Count",
+      "type": "n8n-nodes-ms-dataverse.dataverse",
+      "typeVersion": 1,
+      "position": [750, 1100],
+      "credentials": {
+        "dataverseOAuth2Api": {
+          "id": "CREDENTIAL_ID",
+          "name": "Dataverse account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - List Flows": {
+      "main": [
+        [
+          {
+            "node": "Dataverse - List Flows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dataverse - List Flows": {
+      "main": [
+        [
+          {
+            "node": "Transform List Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform List Response": {
+      "main": [
+        [
+          {
+            "node": "Respond - List Flows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - List Categories": {
+      "main": [
+        [
+          {
+            "node": "Dataverse - List Categories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dataverse - List Categories": {
+      "main": [
+        [
+          {
+            "node": "Transform Categories Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Categories Response": {
+      "main": [
+        [
+          {
+            "node": "Respond - Categories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Get Flow": {
+      "main": [
+        [
+          {
+            "node": "Dataverse - Get Flow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dataverse - Get Flow": {
+      "main": [
+        [
+          {
+            "node": "Transform Flow Response",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Dataverse - Increment View Count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Flow Response": {
+      "main": [
+        [
+          {
+            "node": "Respond - Get Flow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "flow-sharing"
+    },
+    {
+      "name": "api"
+    }
+  ]
+}
