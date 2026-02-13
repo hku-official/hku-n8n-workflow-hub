@@ -108,28 +108,29 @@ export default function FlowDetailPage() {
         <ArrowLeft className="w-4 h-4" /> Back to flows
       </Link>
 
+      <h1 className="text-3xl font-bold text-gray-800">{flow.name}</h1>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          <span className="text-sm text-gray-500 font-medium">Workflow Preview</span>
+          <div className="flex gap-2">
+            <button onClick={handleCopy} className="btn-secondary text-xs flex items-center gap-1.5">
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? 'Copied!' : 'Copy JSON'}
+            </button>
+            <button onClick={handleDownload} className="btn-primary text-xs flex items-center gap-1.5">
+              <Download className="w-3.5 h-3.5" /> Download
+            </button>
+            <button onClick={handleImport} className="btn-primary text-xs flex items-center gap-1.5">
+              <ExternalLink className="w-3.5 h-3.5" /> Import to n8n
+            </button>
+          </div>
+        </div>
+        <div ref={demoContainerRef} style={{ minHeight: '500px', width: '100%' }} />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <h1 className="text-3xl font-bold text-gray-800">{flow.name}</h1>
-
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <span className="text-sm text-gray-500 font-medium">Workflow Preview</span>
-              <div className="flex gap-2">
-                <button onClick={handleCopy} className="btn-secondary text-xs flex items-center gap-1.5">
-                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? 'Copied!' : 'Copy JSON'}
-                </button>
-                <button onClick={handleDownload} className="btn-primary text-xs flex items-center gap-1.5">
-                  <Download className="w-3.5 h-3.5" /> Download
-                </button>
-                <button onClick={handleImport} className="btn-primary text-xs flex items-center gap-1.5">
-                  <ExternalLink className="w-3.5 h-3.5" /> Import to n8n
-                </button>
-              </div>
-            </div>
-            <div className="p-4" ref={demoContainerRef} style={{ minHeight: '600px' }} />
-          </div>
 
           {parsedWorkflow?.nodes?.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
